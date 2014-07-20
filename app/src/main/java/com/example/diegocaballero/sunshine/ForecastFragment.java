@@ -13,8 +13,10 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 
 
 import org.json.JSONArray;
@@ -28,6 +30,8 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 
 /**
@@ -37,6 +41,7 @@ public class ForecastFragment extends Fragment{
     private String[] data;
 
     View rootView = null;
+    ArrayAdapter<String> adapter;
     public String[] getData() {
         return data;
     }
@@ -70,6 +75,19 @@ public class ForecastFragment extends Fragment{
                 "Sat 6/28 - TRAPPED IN WEATHERSTATION - 23/18",
                 "Sun 6/29 - Sunny - 20/7"
         };
+        ArrayList<String> list =new ArrayList<String>();
+        list.addAll(Arrays.asList(data));
+        adapter = new ArrayAdapter<String>(getActivity(), R.layout.list_item_forecast, R.id.list_item_forecast_textview, list);
+        adapter.setNotifyOnChange(true);
+        ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
+        listView.setAdapter(adapter);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                Toast.makeText(getActivity(),adapter.getItem(i), Toast.LENGTH_SHORT).show();
+
+            }
+        });
         return rootView;
 
     }
@@ -157,10 +175,9 @@ public class ForecastFragment extends Fragment{
 
         @Override
         protected void onPostExecute(String[] strings) {
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(getActivity(), R.layout.list_item_forecast, R.id.list_item_forecast_textview, strings);
-            ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
-            listView.setAdapter(adapter);
-            
+
+            adapter.clear();
+            adapter.addAll(strings);
         }
 
         protected String[] doInBackground(Integer... params) {
