@@ -7,4 +7,7 @@
     <string name="action_refresh">Refresh</string>
     <string name="title_activity_detail">DetailActivity</string>
 
+    <string name="pref_location_key" >locationKey</string>
+    <string name="pref_location_default">94043</string>
+    <string name="pref_location_label">Location</string>
 </resources>

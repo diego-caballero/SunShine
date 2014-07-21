@@ -1,10 +1,14 @@
 package com.example.diegocaballero.sunshine;
 
 
-
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
+import android.net.rtp.RtpStream;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -16,8 +20,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
-
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,7 +41,7 @@ import java.util.Date;
  */
 public class ForecastFragment extends Fragment{
     private String[] data;
-
+    private String LOG_TAG = ForecastFragment.class.getSimpleName();
     View rootView = null;
     ArrayAdapter<String> adapter;
     public String[] getData() {
@@ -54,9 +56,15 @@ public class ForecastFragment extends Fragment{
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
         int id = item.getItemId();
+        if (id == R.id.action_settings){
+
+        }
         if (id == R.id.action_refresh){
             FetchWeatherTask task = new FetchWeatherTask();
-            task.execute(12211);
+            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+            String location = preferences.getString(getString(R.string.pref_location_key),getString(R.string.pref_location_default));
+            Log.v(LOG_TAG, "location ->" + location);
+            task.execute(Integer.parseInt(location));
             return true;
         }
         return super.onOptionsItemSelected(item);
@@ -84,7 +92,9 @@ public class ForecastFragment extends Fragment{
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                Toast.makeText(getActivity(),adapter.getItem(i), Toast.LENGTH_SHORT).show();
+                String forecast = adapter.getItem(i);
+                Intent intent = new Intent(getActivity(), DetailActivity.class).putExtra(Intent.EXTRA_TEXT,forecast);
+                startActivity(intent);
 
             }
         });
