@@ -1,19 +1,18 @@
 package com.example.diegocaballero.sunshine;
 
 import android.content.Intent;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.app.ActionBar;
-import android.support.v4.app.Fragment;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.view.MenuItemCompat;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.widget.ShareActionProvider;
 import android.view.LayoutInflater;
 import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.os.Build;
 import android.widget.TextView;
-
-import com.example.diegocaballero.sunshine.R;
 
 public class DetailActivity extends ActionBarActivity {
 
@@ -28,8 +27,9 @@ public class DetailActivity extends ActionBarActivity {
                     .commit();
         }
         Intent intent = this.getIntent();
-        forecast = intent.getStringExtra(Intent.EXTRA_TEXT);
-
+        if (intent.hasExtra(Intent.EXTRA_TEXT)) {
+            forecast = intent.getStringExtra(Intent.EXTRA_TEXT);
+        }
 
     }
 
@@ -61,6 +61,17 @@ public class DetailActivity extends ActionBarActivity {
     public  class PlaceholderFragment extends Fragment {
 
         public PlaceholderFragment() {
+            setHasOptionsMenu(true);
+        }
+
+        @Override
+        public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+            inflater.inflate(R.menu.detailfragment, menu);
+            MenuItem menuItem = menu.findItem(R.id.action_share);
+            ShareActionProvider provider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
+            if(provider!=null){
+                provider.setShareIntent(createShareIntent());
+            }
         }
 
         @Override
@@ -70,6 +81,14 @@ public class DetailActivity extends ActionBarActivity {
             TextView textView = (TextView) rootView.findViewById(R.id.forecast_detail);
             textView.setText(forecast);
             return rootView;
+        }
+
+        private Intent createShareIntent(){
+            Intent shareIntent = new Intent(Intent.ACTION_SEND);
+            shareIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+            shareIntent.setType("text/plain");
+            shareIntent.putExtra(Intent.EXTRA_TEXT, "hola");
+            return shareIntent;
         }
     }
 }

@@ -5,9 +5,16 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="action_refresh">Refresh</string>
+    <string name="action_share">Share</string>
     <string name="title_activity_detail">DetailActivity</string>
 
     <string name="pref_location_key" >locationKey</string>
     <string name="pref_location_default">94043</string>
     <string name="pref_location_label">Location</string>
+
+    <string name="pref_unit_key">unitKey</string>
+    <string name="pref_unitDefault">Metric</string>
+    <string name="pref_unit_label">Units</string>
+
+    <string name="geolocation_title">Show location</string>
 </resources>
