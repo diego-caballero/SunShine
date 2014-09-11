@@ -31,8 +31,11 @@ public class WeatherContract {
     public static final String LOCATION_PATH = "location";
     /* Inner class that defines the table contents of the weather table */
     public static final class WeatherEntry implements BaseColumns {
+
         public static final Uri CONTENT_URI = BASE_CONTENT_URL.buildUpon().appendPath(WEATHER_PATH).build();
         public static final String TABLE_NAME = "weather";
+        public static final String CONTENT_TYPE = "vnd.android.cursor.dir/" + CONTENT_AUTHORITY + "/" + WEATHER_PATH;
+        public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/" + CONTENT_AUTHORITY + "/" + WEATHER_PATH;
 
         // Column with the foreign key into the location table.
         public static final String COLUMN_LOC_KEY = "location_id";
@@ -113,7 +116,8 @@ public class WeatherContract {
         public static final String COLUMN_COORD_LAT = "coord_lat";
         public static final String COLUMN_COORD_LONG = "coord_long";
 
-        public static Uri getLocationById(int id) {
+
+        public static Uri buildLocationUri(long id) {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
     }
