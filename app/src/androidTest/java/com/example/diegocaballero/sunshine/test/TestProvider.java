@@ -25,6 +25,7 @@ public class TestProvider extends AndroidTestCase {
         WeatherDBHelper dbHelper = new WeatherDBHelper(mContext);
         SQLiteDatabase db = dbHelper.getWritableDatabase();
 
+
         ContentValues testValues = TestDb.createNorthPoleLocationValues();
 
         long locationRowId;
@@ -38,13 +39,10 @@ public class TestProvider extends AndroidTestCase {
         // the round trip.
 
         // A cursor is your primary interface to the query results.
-        Cursor cursor = db.query(
-                LocationEntry.TABLE_NAME,  // Table to Query
+        Cursor cursor = mContext.getContentResolver().query(LocationEntry.CONTENT_URI,
                 null, // all columns
                 null, // Columns for the "where" clause
                 null, // Values for the "where" clause
-                null, // columns to group by
-                null, // columns to filter by row groups
                 null // sort order
         );
 
@@ -56,15 +54,11 @@ public class TestProvider extends AndroidTestCase {
         long weatherRowId = db.insert(WeatherEntry.TABLE_NAME, null, weatherValues);
         assertTrue(weatherRowId != -1);
 
-        // A cursor is your primary interface to the query results.
-        Cursor weatherCursor = db.query(
-                WeatherEntry.TABLE_NAME,  // Table to Query
-                null, // leaving "columns" null just returns all the columns.
-                null, // cols for "where" clause
-                null, // values for "where" clause
-                null, // columns to group by
-                null, // columns to filter by row groups
-                null  // sort order
+        Cursor weatherCursor = mContext.getContentResolver().query(WeatherEntry.CONTENT_URI,
+                null, // all columns
+                null, // Columns for the "where" clause
+                null, // Values for the "where" clause
+                null // sort order
         );
 
         TestDb.validateCursor(weatherCursor, weatherValues);

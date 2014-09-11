@@ -1,6 +1,7 @@
 package com.example.diegocaballero.sunshine.data;
 
 import android.content.ContentProvider;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
@@ -39,8 +40,33 @@ public class WeatherProvider extends ContentProvider {
     }
 
     @Override
-    public Cursor query(Uri uri, String[] strings, String s, String[] strings2, String s2) {
-        return null;
+    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder) {
+        int type = matcher.match(uri);
+        Cursor cursor = null;
+        switch (type){
+            case WEATHER:{
+                cursor = helper.getReadableDatabase().query(WeatherContract.WeatherEntry.TABLE_NAME, projection,selection,selectionArgs,null,null,sortOrder);
+                break;
+            }
+            case WEATHER_WITH_LOCATION:{
+                break;
+            }
+            case WEATHER_WITH_LOCATION_AND_DATE:{
+                break;
+            }
+            case LOCATION:{
+                cursor = helper.getReadableDatabase().query(WeatherContract.LocationEntry.TABLE_NAME, projection,selection,selectionArgs,null,null,sortOrder);
+                break;
+            }
+            case LOCATION_ID:{
+                cursor = helper.getReadableDatabase().query(WeatherContract.LocationEntry.TABLE_NAME, projection,WeatherContract.LocationEntry._ID + " = '" + ContentUris.parseId(uri) + "'",null,null,null,sortOrder);
+                break;
+
+            }
+
+        }
+        cursor.setNotificationUri(getContext().getContentResolver(),uri);
+        return cursor;
     }
 
     @Override
@@ -48,12 +74,12 @@ public class WeatherProvider extends ContentProvider {
         int type = matcher.match(uri);
 
         switch (type){
-            case WEATHER: return WeatherContract.WeatherEntry.CONTENT_TYPE;
-            case WEATHER_WITH_LOCATION: return WeatherContract.WeatherEntry.CONTENT_TYPE;
+            case WEATHER:                        return WeatherContract.WeatherEntry.CONTENT_TYPE;
+            case WEATHER_WITH_LOCATION:          return WeatherContract.WeatherEntry.CONTENT_TYPE;
             case WEATHER_WITH_LOCATION_AND_DATE: return WeatherContract.WeatherEntry.CONTENT_ITEM_TYPE;
 
-            case LOCATION: return WeatherContract.LocationEntry.CONTENT_TYPE;
-            case LOCATION_ID: return WeatherContract.LocationEntry.CONTENT_ITEM_TYPE;
+            case LOCATION:                       return WeatherContract.LocationEntry.CONTENT_TYPE;
+            case LOCATION_ID:                    return WeatherContract.LocationEntry.CONTENT_ITEM_TYPE;
             default:
                 throw new UnsupportedOperationException("Uknown URI: " + uri);
         }
