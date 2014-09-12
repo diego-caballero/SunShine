@@ -63,6 +63,8 @@ public class TestProvider extends AndroidTestCase {
 
         TestDb.validateCursor(weatherCursor, weatherValues);
 
+
+        TestDb.validateCursor(weatherCursor, weatherValues);
         dbHelper.close();
     }
 
