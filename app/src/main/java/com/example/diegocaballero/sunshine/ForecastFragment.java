@@ -3,10 +3,12 @@ package com.example.diegocaballero.sunshine;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,6 +27,8 @@ import com.example.diegocaballero.sunshine.data.WeatherContract.WeatherEntry;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
+
 /**
  * Created by diegocaballero on 19/07/14.
  */
