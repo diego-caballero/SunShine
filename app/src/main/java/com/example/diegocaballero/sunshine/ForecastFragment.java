@@ -3,6 +3,7 @@ package com.example.diegocaballero.sunshine;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -10,6 +11,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -18,25 +20,22 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.example.diegocaballero.sunshine.data.WeatherContract;
 import com.example.diegocaballero.sunshine.data.WeatherContract.LocationEntry;
 import com.example.diegocaballero.sunshine.data.WeatherContract.WeatherEntry;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 
 /**
  * Created by diegocaballero on 19/07/14.
  */
-public class ForecastFragment extends Fragment implements LoaderManager.LoaderCallbacks{
+public class ForecastFragment extends Fragment implements LoaderManager.LoaderCallbacks<Cursor>{
 
     private String LOG_TAG = ForecastFragment.class.getSimpleName();
-    View rootView = null;
-    ArrayAdapter<String> adapter;
+    private View rootView = null;
+    private SimpleCursorAdapter mForecastAdapter;
 
     private static final int FORECAST_LOADER = 0;
     private String mLocation;
@@ -85,7 +84,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
         }
         if (id == R.id.action_refresh){
-            FetchWeatherTask task = new FetchWeatherTask(getActivity(),adapter);
+            FetchWeatherTask task = new FetchWeatherTask(getActivity());
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
             String location = preferences.getString(getString(R.string.pref_location_key),getString(R.string.pref_location_default));
             Log.v(LOG_TAG, "location ->" + location);
@@ -99,26 +98,34 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
                              Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.fragment_main, container, false);
         this.setHasOptionsMenu(true);
-        String[] data = {
-                "Mon 6/23 - Sunny - 31/17",
-                "Tue 6/24 - Foggy - 21/8",
-                "Wed 6/25 - Cloudy - 22/17",
-                "Thurs 6/26 - Rainy - 18/11",
-                "Fri 6/27 - Foggy - 21/10",
-                "Sat 6/28 - TRAPPED IN WEATHERSTATION - 23/18",
-                "Sun 6/29 - Sunny - 20/7"
-        };
-        ArrayList<String> list =new ArrayList<String>();
-        list.addAll(Arrays.asList(data));
-        adapter = new ArrayAdapter<String>(getActivity(), R.layout.list_item_forecast, R.id.list_item_forecast_textview, list);
-        adapter.setNotifyOnChange(true);
+
+        // The SimpleCursorAdapter will take data from the database through the
+        // Loader and use it to populate the ListView it's attached to.
+        mForecastAdapter = new SimpleCursorAdapter(
+                getActivity(),
+                R.layout.list_item_forecast,
+                null,
+                // the column names to use to fill the textviews
+                new String[]{WeatherContract.WeatherEntry.COLUMN_DATETEXT,
+                        WeatherContract.WeatherEntry.COLUMN_SHORT_DESC,
+                        WeatherContract.WeatherEntry.COLUMN_MAX_TEMP,
+                        WeatherContract.WeatherEntry.COLUMN_MIN_TEMP
+                },
+                // the textviews to fill with the data pulled from the columns above
+                new int[]{R.id.list_item_date_textview,
+                        R.id.list_item_forecast_textview,
+                        R.id.list_item_high_textview,
+                        R.id.list_item_low_textview
+                },
+                0
+        );
         ListView listView = (ListView) rootView.findViewById(R.id.listview_forecast);
-        listView.setAdapter(adapter);
+        listView.setAdapter(mForecastAdapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                String forecast = adapter.getItem(i);
-                Intent intent = new Intent(getActivity(), DetailActivity.class).putExtra(Intent.EXTRA_TEXT,forecast);
+                Intent intent = new Intent(getActivity(), DetailActivity.class)
+                        .putExtra(Intent.EXTRA_TEXT, "placeholder");
                 startActivity(intent);
 
             }
@@ -155,15 +162,17 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
                 null,
                 sortOrder
         );
+
+
     }
 
     @Override
-    public void onLoadFinished(Loader loader, Object data) {
-
+    public void onLoadFinished(Loader loader, Cursor data) {
+        mForecastAdapter.swapCursor(data);
     }
 
     @Override
     public void onLoaderReset(Loader loader) {
-
+        mForecastAdapter.swapCursor(null);
     }
 }

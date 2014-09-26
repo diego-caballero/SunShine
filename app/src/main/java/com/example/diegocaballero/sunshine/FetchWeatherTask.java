@@ -7,7 +7,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.util.Log;
-import android.widget.ArrayAdapter;
 
 import com.example.diegocaballero.sunshine.data.WeatherContract;
 
@@ -28,16 +27,16 @@ import java.util.Vector;
 /**
  * Created by admin on 9/23/14.
  */
-public class FetchWeatherTask extends AsyncTask<String,Void,String[]> {
+public class FetchWeatherTask extends AsyncTask<String,Void,Void> {
 
     private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
 
-    private ArrayAdapter<String> mForecastAdapter;
+
     private final Context mContext;
 
-    public FetchWeatherTask(Context context, ArrayAdapter<String> forecastAdapter) {
+    public FetchWeatherTask(Context context) {
         mContext = context;
-        mForecastAdapter = forecastAdapter;
+
     }
 
     /* The date/time conversion code is going to be moved outside the asynctask later,
@@ -88,7 +87,7 @@ public class FetchWeatherTask extends AsyncTask<String,Void,String[]> {
      * Fortunately parsing is easy:  constructor takes the JSON string and converts it
      * into an Object hierarchy for us.
      */
-    private String[] getWeatherDataFromJson(String forecastJsonStr, int numDays,
+    private void getWeatherDataFromJson(String forecastJsonStr, int numDays,
                                             String locationSetting)
             throws JSONException {
 
@@ -136,7 +135,7 @@ public class FetchWeatherTask extends AsyncTask<String,Void,String[]> {
         // Get and insert the new weather information into the database
         Vector<ContentValues> cVVector = new Vector<ContentValues>(weatherArray.length());
 
-        String[] resultStrs = new String[numDays];
+
 
         for(int i = 0; i < weatherArray.length(); i++) {
             // These are the values that will be collected.
@@ -193,20 +192,20 @@ public class FetchWeatherTask extends AsyncTask<String,Void,String[]> {
             weatherValues.put(WeatherContract.WeatherEntry.COLUMN_SHORT_DESC, description);
             weatherValues.put(WeatherContract.WeatherEntry.COLUMN_WEATHER_ID, weatherId);
 
+            ContentValues[] values  = new ContentValues[cVVector.size()];
+            values = cVVector.toArray(values);
             cVVector.add(weatherValues);
 
             if(cVVector.size()>0){
-                mContext.getContentResolver().bulkInsert((WeatherContract.WeatherEntry.CONTENT_URI), (ContentValues[])cVVector.toArray());
+                mContext.getContentResolver().bulkInsert((WeatherContract.WeatherEntry.CONTENT_URI), values);
             }
 
-            String highAndLow = formatHighLows(high, low);
-            String day = getReadableDateString(dateTime);
-            resultStrs[i] = day + " - " + description + " - " + highAndLow;
+
         }
-        return resultStrs;
+
     }
     @Override
-    protected String[] doInBackground(String... params) {
+    protected Void doInBackground(String... params) {
 
         // If there's no zip code, there's nothing to look up.  Verify size of params.
         if (params.length == 0) {
@@ -292,7 +291,7 @@ public class FetchWeatherTask extends AsyncTask<String,Void,String[]> {
         }
 
         try {
-            return getWeatherDataFromJson(forecastJsonStr, numDays, locationQuery);
+             getWeatherDataFromJson(forecastJsonStr, numDays, locationQuery);
         } catch (JSONException e) {
             Log.e(LOG_TAG, e.getMessage(), e);
             e.printStackTrace();
@@ -301,16 +300,6 @@ public class FetchWeatherTask extends AsyncTask<String,Void,String[]> {
         return null;
     }
 
-    @Override
-    protected void onPostExecute(String[] result) {
-        if (result != null) {
-            mForecastAdapter.clear();
-            for(String dayForecastStr : result) {
-                mForecastAdapter.add(dayForecastStr);
-            }
-            // New data is back from the server.  Hooray!
-        }
-    }
 
     /**
      * Helper method to handle insertion of a new location in the weather database.
