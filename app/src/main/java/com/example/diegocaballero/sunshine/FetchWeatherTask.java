@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2014 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.example.diegocaballero.sunshine;
 
 import android.content.ContentUris;
@@ -9,6 +24,8 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.example.diegocaballero.sunshine.data.WeatherContract;
+import com.example.diegocaballero.sunshine.data.WeatherContract.LocationEntry;
+import com.example.diegocaballero.sunshine.data.WeatherContract.WeatherEntry;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -20,64 +37,52 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Vector;
 
-/**
- * Created by admin on 9/23/14.
- */
-public class FetchWeatherTask extends AsyncTask<String,Void,Void> {
+public class FetchWeatherTask extends AsyncTask<String, Void, Void> {
 
     private final String LOG_TAG = FetchWeatherTask.class.getSimpleName();
-
-
     private final Context mContext;
 
     public FetchWeatherTask(Context context) {
         mContext = context;
-
-    }
-
-    /* The date/time conversion code is going to be moved outside the asynctask later,
-     * so for convenience we're breaking it out into its own method now.
-     */
-    private String getReadableDateString(long time){
-        // Because the API returns a unix timestamp (measured in seconds),
-        // it must be converted to milliseconds in order to be converted to valid date.
-        Date date = new Date(time * 1000);
-        SimpleDateFormat format = new SimpleDateFormat("E, MMM d");
-        return format.format(date).toString();
     }
 
     /**
-     * Prepare the weather high/lows for presentation.
+     * Helper method to handle insertion of a new location in the weather database.
+     *
+     * @param locationSetting The location string used to request updates from the server.
+     * @param cityName A human-readable city name, e.g "Mountain View"
+     * @param lat the latitude of the city
+     * @param lon the longitude of the city
+     * @return the row ID of the added location.
      */
-    private String formatHighLows(double high, double low) {
-        // Data is fetched in Celsius by default.
-        // If user prefers to see in Fahrenheit, convert the values here.
-        // We do this rather than fetching in Fahrenheit so that the user can
-        // change this option without us having to re-fetch the data once
-        // we start storing the values in a database.
-//        SharedPreferences sharedPrefs =
-//                PreferenceManager.getDefaultSharedPreferences(mContext);
-//        String unitType = sharedPrefs.getString(
-//                mContext.getString(R.string.pref_units_key),
-//                mContext.getString(R.string.pref_units_metric));
-//
-//        if (unitType.equals(mContext.getString(R.string.pref_units_imperial))) {
-//            high = (high * 1.8) + 32;
-//            low = (low * 1.8) + 32;
-//        } else if (!unitType.equals(mContext.getString(R.string.pref_units_metric))) {
-//            Log.d(LOG_TAG, "Unit type not found: " + unitType);
-//        }
+    private long addLocation(String locationSetting, String cityName, double lat, double lon) {
 
-        // For presentation, assume the user doesn't care about tenths of a degree.
-        long roundedHigh = Math.round(high);
-        long roundedLow = Math.round(low);
+        // First, check if the location with this city name exists in the db
+        Cursor cursor = mContext.getContentResolver().query(
+                LocationEntry.CONTENT_URI,
+                new String[]{LocationEntry._ID},
+                LocationEntry.COLUMN_LOCATION_SETTING + " = ?",
+                new String[]{locationSetting},
+                null);
 
-        String highLowStr = roundedHigh + "/" + roundedLow;
-        return highLowStr;
+        if (cursor.moveToFirst()) {
+            int locationIdIndex = cursor.getColumnIndex(LocationEntry._ID);
+            return cursor.getLong(locationIdIndex);
+        } else {
+            ContentValues locationValues = new ContentValues();
+            locationValues.put(LocationEntry.COLUMN_LOCATION_SETTING, locationSetting);
+            locationValues.put(LocationEntry.COLUMN_CITY_NAME, cityName);
+            locationValues.put(LocationEntry.COLUMN_COORD_LAT, lat);
+            locationValues.put(LocationEntry.COLUMN_COORD_LONG, lon);
+
+            Uri locationInsertUri = mContext.getContentResolver()
+                    .insert(LocationEntry.CONTENT_URI, locationValues);
+
+            return ContentUris.parseId(locationInsertUri);
+        }
     }
 
     /**
@@ -88,7 +93,7 @@ public class FetchWeatherTask extends AsyncTask<String,Void,Void> {
      * into an Object hierarchy for us.
      */
     private void getWeatherDataFromJson(String forecastJsonStr, int numDays,
-                                            String locationSetting)
+                                        String locationSetting)
             throws JSONException {
 
         // These are the names of the JSON objects that need to be extracted.
@@ -135,8 +140,6 @@ public class FetchWeatherTask extends AsyncTask<String,Void,Void> {
         // Get and insert the new weather information into the database
         Vector<ContentValues> cVVector = new Vector<ContentValues>(weatherArray.length());
 
-
-
         for(int i = 0; i < weatherArray.length(); i++) {
             // These are the values that will be collected.
 
@@ -180,30 +183,27 @@ public class FetchWeatherTask extends AsyncTask<String,Void,Void> {
 
             ContentValues weatherValues = new ContentValues();
 
-            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_LOC_KEY, locationID);
-            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_DATETEXT,
+            weatherValues.put(WeatherEntry.COLUMN_LOC_KEY, locationID);
+            weatherValues.put(WeatherEntry.COLUMN_DATETEXT,
                     WeatherContract.getDbDateString(new Date(dateTime * 1000L)));
-            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_HUMIDITY, humidity);
-            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_PRESSURE, pressure);
-            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_WIND_SPEED, windSpeed);
-            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_DEGREES, windDirection);
-            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_MAX_TEMP, high);
-            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_MIN_TEMP, low);
-            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_SHORT_DESC, description);
-            weatherValues.put(WeatherContract.WeatherEntry.COLUMN_WEATHER_ID, weatherId);
+            weatherValues.put(WeatherEntry.COLUMN_HUMIDITY, humidity);
+            weatherValues.put(WeatherEntry.COLUMN_PRESSURE, pressure);
+            weatherValues.put(WeatherEntry.COLUMN_WIND_SPEED, windSpeed);
+            weatherValues.put(WeatherEntry.COLUMN_DEGREES, windDirection);
+            weatherValues.put(WeatherEntry.COLUMN_MAX_TEMP, high);
+            weatherValues.put(WeatherEntry.COLUMN_MIN_TEMP, low);
+            weatherValues.put(WeatherEntry.COLUMN_SHORT_DESC, description);
+            weatherValues.put(WeatherEntry.COLUMN_WEATHER_ID, weatherId);
 
-            ContentValues[] values  = new ContentValues[cVVector.size()];
-            values = cVVector.toArray(values);
             cVVector.add(weatherValues);
-
-            if(cVVector.size()>0){
-                mContext.getContentResolver().bulkInsert((WeatherContract.WeatherEntry.CONTENT_URI), values);
-            }
-
-
         }
-
+        if (cVVector.size() > 0) {
+            ContentValues[] cvArray = new ContentValues[cVVector.size()];
+            cVVector.toArray(cvArray);
+            mContext.getContentResolver().bulkInsert(WeatherEntry.CONTENT_URI, cvArray);
+        }
     }
+
     @Override
     protected Void doInBackground(String... params) {
 
@@ -291,7 +291,7 @@ public class FetchWeatherTask extends AsyncTask<String,Void,Void> {
         }
 
         try {
-             getWeatherDataFromJson(forecastJsonStr, numDays, locationQuery);
+            getWeatherDataFromJson(forecastJsonStr, numDays, locationQuery);
         } catch (JSONException e) {
             Log.e(LOG_TAG, e.getMessage(), e);
             e.printStackTrace();
@@ -299,46 +299,4 @@ public class FetchWeatherTask extends AsyncTask<String,Void,Void> {
         // This will only happen if there was an error getting or parsing the forecast.
         return null;
     }
-
-
-    /**
-     * Helper method to handle insertion of a new location in the weather database.
-     *
-     * @param locationSetting The location string used to request updates from the server.
-     * @param cityName A human-readable city name, e.g "Mountain View"
-     * @param lat the latitude of the city
-     * @param lon the longitude of the city
-     * @return the row ID of the added location.
-     */
-    private long addLocation(String locationSetting, String cityName, double lat, double lon) {
-
-        Log.v(LOG_TAG, "inserting " + cityName + ", with coord: " + lat + ", " + lon);
-
-        // First, check if the location with this city name exists in the db
-        Cursor cursor = mContext.getContentResolver().query(
-                WeatherContract.LocationEntry.CONTENT_URI,
-                new String[]{WeatherContract.LocationEntry._ID},
-                WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING + " = ?",
-                new String[]{locationSetting},
-                null);
-
-        if (cursor.moveToFirst()) {
-            Log.v(LOG_TAG, "Found it in the database!");
-            int locationIdIndex = cursor.getColumnIndex(WeatherContract.LocationEntry._ID);
-            return cursor.getLong(locationIdIndex);
-        } else {
-            Log.v(LOG_TAG, "Didn't find it in the database, inserting now!");
-            ContentValues locationValues = new ContentValues();
-            locationValues.put(WeatherContract.LocationEntry.COLUMN_LOCATION_SETTING, locationSetting);
-            locationValues.put(WeatherContract.LocationEntry.COLUMN_CITY_NAME, cityName);
-            locationValues.put(WeatherContract.LocationEntry.COLUMN_COORD_LAT, lat);
-            locationValues.put(WeatherContract.LocationEntry.COLUMN_COORD_LONG, lon);
-
-            Uri locationInsertUri = mContext.getContentResolver()
-                    .insert(WeatherContract.LocationEntry.CONTENT_URI, locationValues);
-
-            return ContentUris.parseId(locationInsertUri);
-        }
-    }
-
 }
