@@ -9,7 +9,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -18,7 +17,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.example.diegocaballero.sunshine.data.WeatherContract;
 import com.example.diegocaballero.sunshine.data.WeatherContract.LocationEntry;
@@ -57,7 +55,7 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
             WeatherEntry.COLUMN_MIN_TEMP,
             LocationEntry.COLUMN_LOCATION_SETTING
     };
-    private SimpleCursorAdapter mForecastAdapter;
+    private ForecastAdapter mForecastAdapter;
     private String mLocation;
 
     public ForecastFragment() {
@@ -94,47 +92,48 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
 
         // The SimpleCursorAdapter will take data from the database through the
         // Loader and use it to populate the ListView it's attached to.
-        mForecastAdapter = new SimpleCursorAdapter(
-                getActivity(),
-                R.layout.list_item_forecast,
-                null,
-                // the column names to use to fill the textviews
-                new String[]{WeatherEntry.COLUMN_DATETEXT,
-                        WeatherEntry.COLUMN_SHORT_DESC,
-                        WeatherEntry.COLUMN_MAX_TEMP,
-                        WeatherEntry.COLUMN_MIN_TEMP
-                },
-                // the textviews to fill with the data pulled from the columns above
-                new int[]{R.id.list_item_date_textview,
-                        R.id.list_item_forecast_textview,
-                        R.id.list_item_high_textview,
-                        R.id.list_item_low_textview
-                },
-                0
-        );
+        mForecastAdapter= new ForecastAdapter(getActivity(),null,0);
+//        mForecastAdapter = new SimpleCursorAdapter(
+//                getActivity(),
+//                R.layout.list_item_forecast,
+//                null,
+//                // the column names to use to fill the textviews
+//                new String[]{WeatherEntry.COLUMN_DATETEXT,
+//                        WeatherEntry.COLUMN_SHORT_DESC,
+//                        WeatherEntry.COLUMN_MAX_TEMP,
+//                        WeatherEntry.COLUMN_MIN_TEMP
+//                },
+//                // the textviews to fill with the data pulled from the columns above
+//                new int[]{R.id.list_item_date_textview,
+//                        R.id.list_item_forecast_textview,
+//                        R.id.list_item_high_textview,
+//                        R.id.list_item_low_textview
+//                },
+//                0
+//        );
 
-        mForecastAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
-            @Override
-            public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
-                boolean isMetric = Utility.isMetric(getActivity());
-                switch (columnIndex) {
-                    case COL_WEATHER_MAX_TEMP:
-                    case COL_WEATHER_MIN_TEMP: {
-                        // we have to do some formatting and possibly a conversion
-                        ((TextView) view).setText(Utility.formatTemperature(
-                                cursor.getDouble(columnIndex), isMetric));
-                        return true;
-                    }
-                    case COL_WEATHER_DATE: {
-                        String dateString = cursor.getString(columnIndex);
-                        TextView dateView = (TextView) view;
-                        dateView.setText(Utility.formatDate(dateString));
-                        return true;
-                    }
-                }
-                return false;
-            }
-        });
+//        mForecastAdapter.setViewBinder(new SimpleCursorAdapter.ViewBinder() {
+//            @Override
+//            public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
+//                boolean isMetric = Utility.isMetric(getActivity());
+//                switch (columnIndex) {
+//                    case COL_WEATHER_MAX_TEMP:
+//                    case COL_WEATHER_MIN_TEMP: {
+//                        // we have to do some formatting and possibly a conversion
+//                        ((TextView) view).setText(Utility.formatTemperature(
+//                                cursor.getDouble(columnIndex), isMetric));
+//                        return true;
+//                    }
+//                    case COL_WEATHER_DATE: {
+//                        String dateString = cursor.getString(columnIndex);
+//                        TextView dateView = (TextView) view;
+//                        dateView.setText(Utility.formatDate(dateString));
+//                        return true;
+//                    }
+//                }
+//                return false;
+//            }
+//        });
 
         View rootView = inflater.inflate(R.layout.fragment_main, container, false);
 
