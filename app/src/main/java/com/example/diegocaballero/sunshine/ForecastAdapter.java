@@ -59,7 +59,12 @@ public class ForecastAdapter extends CursorAdapter {
         int weatherId = cursor.getInt(cursor.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_WEATHER_ID));
         // Use placeholder image for now
         ImageView iconView = holder.iconView;
-        iconView.setImageResource(Utility.getIconResourceForWeatherCondition(weatherId));
+        int viewType = getItemViewType(cursor.getPosition());
+        switch (viewType) {
+            case VIEW_TYPE_TODAY : iconView.setImageResource(Utility.getArtResourceForWeatherCondition(weatherId));break;
+            case VIEW_TYPE_FUTURE_DAY :  iconView.setImageResource(Utility.getIconResourceForWeatherCondition(weatherId));break;
+        }
+
 
         // Read date from cursor
         String dateString = cursor.getString(ForecastFragment.COL_WEATHER_DATE);
