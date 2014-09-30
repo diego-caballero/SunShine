@@ -17,6 +17,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.diegocaballero.sunshine.data.WeatherContract;
@@ -39,7 +40,8 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
             WeatherContract.WeatherEntry.COLUMN_HUMIDITY,
             WeatherContract.WeatherEntry.COLUMN_WIND_SPEED,
             WeatherContract.WeatherEntry.COLUMN_DEGREES,
-            WeatherContract.WeatherEntry.COLUMN_PRESSURE
+            WeatherContract.WeatherEntry.COLUMN_PRESSURE,
+            WeatherContract.WeatherEntry.COLUMN_WEATHER_ID
     };
     private ShareActionProvider mShareActionProvider;
     private String mLocation;
@@ -145,6 +147,10 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
                 data.getString(data.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_DATETEXT)));
         ((TextView) getView().findViewById(R.id.detail_date_textview))
                 .setText(dateString);
+
+        int weatherId = data.getInt(data.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_WEATHER_ID));
+        ImageView image = (ImageView) getView().findViewById(R.id.detail_icon);
+        image.setImageResource(Utility.getArtResourceForWeatherCondition(weatherId));
 
         String weatherDescription =
                 data.getString(data.getColumnIndex(WeatherContract.WeatherEntry.COLUMN_SHORT_DESC));
