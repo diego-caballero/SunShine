@@ -1,7 +1,6 @@
 package com.example.diegocaballero.sunshine;
 
 
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
@@ -108,9 +107,9 @@ public class ForecastFragment extends Fragment implements LoaderManager.LoaderCa
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {
                 Cursor cursor = mForecastAdapter.getCursor();
                 if (cursor != null && cursor.moveToPosition(position)) {
-                    Intent intent = new Intent(getActivity(), DetailActivity.class)
-                            .putExtra(DetailActivity.DATE_KEY, cursor.getString(cursor.getColumnIndex(WeatherEntry.COLUMN_DATETEXT)));
-                    startActivity(intent);
+
+                    String date = cursor.getString(cursor.getColumnIndex(WeatherEntry.COLUMN_DATETEXT));
+                    ((Callback)getActivity()).onItemSelected(date);
                 }
             }
         });

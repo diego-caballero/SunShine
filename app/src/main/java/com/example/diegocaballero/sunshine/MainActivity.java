@@ -11,18 +11,28 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 
-public class MainActivity extends ActionBarActivity {
+public class MainActivity extends ActionBarActivity implements Callback{
     private static String LOG_TAG = MainActivity.class.getSimpleName();
-
+    private boolean tabletMode = false;
+    private String currentDate;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.container, new ForecastFragment())
-                    .commit();
-        }
+        if (findViewById(R.id.weather_detail_container) != null){
+            tabletMode = true;
+
+
+            DetailFragment fragment = new DetailFragment();
+            if(savedInstanceState.getString("CURRENT_DATE",null)!= null){
+                Bundle arguments = new Bundle();
+                arguments.putString("CURRENT_DATE",savedInstanceState.getString("CURRENT_DATE"));
+                fragment.setArguments(arguments);
+            }
+            getSupportFragmentManager().beginTransaction().replace(R.id.weather_detail_container, fragment).commit();
+
+        }else
+            tabletMode = false;
     }
 
 
@@ -34,8 +44,15 @@ public class MainActivity extends ActionBarActivity {
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putString("CURRENT_DATE",this.currentDate);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
+
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
@@ -65,4 +82,23 @@ public class MainActivity extends ActionBarActivity {
         }
     }
 
+    @Override
+    public void onItemSelected(String date) {
+        if (tabletMode){
+            DetailFragment fragment = new DetailFragment();
+            Bundle arguments = new Bundle();
+            arguments.putString(DetailFragment.DATE_KEY,date);
+            fragment.setArguments(arguments);
+            String tag = null;
+            this.currentDate = date;
+            android.support.v4.app.FragmentTransaction transaction = this.getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.weather_detail_container,fragment);
+            transaction.addToBackStack(tag);
+            transaction.commit();
+        }else{
+            Intent intent = new Intent(this,DetailActivity.class);
+            intent.putExtra(DetailActivity.DATE_KEY,date);
+            startActivity(intent);
+        }
+    }
 }

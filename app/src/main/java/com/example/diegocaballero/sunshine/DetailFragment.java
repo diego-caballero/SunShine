@@ -60,15 +60,21 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     @Override
     public void onResume() {
         super.onResume();
-        if (mLocation != null &&
-                !mLocation.equals(Utility.getPreferredLocation(getActivity()))) {
-            getLoaderManager().restartLoader(DETAIL_LOADER, null, this);
+        Intent intent = getActivity().getIntent();
+        if(intent != null && intent.hasExtra(DATE_KEY)){
+            getLoaderManager().initLoader(DETAIL_LOADER, null, this);
         }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        Bundle arguments = this.getArguments();
+        if(arguments != null && arguments.getString(DATE_KEY,null) != null){
+            if(savedInstanceState == null){
+                getLoaderManager().initLoader(DETAIL_LOADER,arguments,this);
+            }
+        }
         return inflater.inflate(R.layout.fragment_detail, container, false);
     }
 
@@ -104,6 +110,10 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         if (savedInstanceState != null) {
             mLocation = savedInstanceState.getString(DetailActivity.LOCATION_KEY);
         }
+        Intent intent = getActivity().getIntent();
+        if(intent != null && intent.hasExtra(DATE_KEY)){
+            getLoaderManager().initLoader(DETAIL_LOADER,null,this);
+        }
         super.onActivityCreated(savedInstanceState);
     }
 
@@ -111,11 +121,15 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Log.v(LOG_TAG, "In onCreateLoader");
         Intent intent = getActivity().getIntent();
-        if (intent == null || !intent.hasExtra(DATE_KEY)) {
+        String forecastDate;
+        if(intent!=null && intent.hasExtra(DATE_KEY)) {
+            forecastDate = intent.getStringExtra(DATE_KEY);
+        } else if(args!= null && args.getString(DATE_KEY,null) != null) {
+            forecastDate = args.getString(DATE_KEY);
+        }
+        else{
             return null;
         }
-        String forecastDate = intent.getStringExtra(DATE_KEY);
-
         // Sort order:  Ascending, by date.
         String sortOrder = WeatherContract.WeatherEntry.COLUMN_DATETEXT + " ASC";
 
