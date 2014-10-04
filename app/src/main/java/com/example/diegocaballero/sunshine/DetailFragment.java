@@ -71,9 +71,11 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
                              Bundle savedInstanceState) {
         Bundle arguments = this.getArguments();
         if(arguments != null && arguments.getString(DATE_KEY,null) != null){
+
             if(savedInstanceState == null){
                 getLoaderManager().initLoader(DETAIL_LOADER,arguments,this);
             }
+
         }
         return inflater.inflate(R.layout.fragment_detail, container, false);
     }
@@ -122,6 +124,7 @@ public class DetailFragment extends Fragment implements LoaderManager.LoaderCall
         Log.v(LOG_TAG, "In onCreateLoader");
         Intent intent = getActivity().getIntent();
         String forecastDate;
+        setRetainInstance(true);
         if(intent!=null && intent.hasExtra(DATE_KEY)) {
             forecastDate = intent.getStringExtra(DATE_KEY);
         } else if(args!= null && args.getString(DATE_KEY,null) != null) {

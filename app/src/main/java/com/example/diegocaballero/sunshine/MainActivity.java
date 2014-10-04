@@ -18,18 +18,16 @@ public class MainActivity extends ActionBarActivity implements Callback{
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
         if (findViewById(R.id.weather_detail_container) != null){
             tabletMode = true;
 
 
             DetailFragment fragment = new DetailFragment();
-            if(savedInstanceState.getString("CURRENT_DATE",null)!= null){
-                Bundle arguments = new Bundle();
-                arguments.putString("CURRENT_DATE",savedInstanceState.getString("CURRENT_DATE"));
-                fragment.setArguments(arguments);
-            }
-            getSupportFragmentManager().beginTransaction().replace(R.id.weather_detail_container, fragment).commit();
+
+            if (savedInstanceState == null)
+                getSupportFragmentManager().beginTransaction().replace(R.id.weather_detail_container, fragment).commit();
 
         }else
             tabletMode = false;
@@ -45,7 +43,6 @@ public class MainActivity extends ActionBarActivity implements Callback{
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        outState.putString("CURRENT_DATE",this.currentDate);
         super.onSaveInstanceState(outState);
     }
 
